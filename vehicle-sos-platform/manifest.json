@@ -1,0 +1,16 @@
+{
+  "name": "Vehicle SOS & Maintenance",
+  "short_name": "Vehicle SOS",
+  "description": "Cross-platform application for vehicle maintenance, insurance tracking, and emergency SOS.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png"
+    }
+  ]
+}
