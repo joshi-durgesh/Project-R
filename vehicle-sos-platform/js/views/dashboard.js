@@ -147,43 +147,64 @@ export default class DashboardView {
         if(!rcInput) return alert('Enter RC Number');
         fetchRcBtn.textContent = 'Fetching...';
         
-        try {
-          const res = await fetch('http://localhost:3000/api/insurance/fetch-by-rc', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rc_number: rcInput })
+        // Mock API Delay
+        setTimeout(() => {
+          const mockProviders = ['HDFC Ergo', 'ICICI Lombard', 'Acko', 'Digit'];
+          const coverageTypes = ['Third-Party', 'Comprehensive'];
+          const randomCoverage = coverageTypes[Math.floor(Math.random() * coverageTypes.length)];
+          const d = new Date();
+          d.setMonth(d.getMonth() + 5);
+          
+          renderCard({
+            provider_name: mockProviders[Math.floor(Math.random() * mockProviders.length)],
+            expiry_date: d.toISOString().split('T')[0],
+            coverage_type: randomCoverage
           });
-          const result = await res.json();
-          if(result.success) renderCard(result.data);
-          else alert(result.error);
-        } catch (err) {
-          console.error(err);
-          alert('Failed to connect to backend API');
           fetchRcBtn.textContent = 'Fetch via VAHAN';
-        }
+        }, 1000);
       });
     }
 
     if (policyUpload) {
       policyUpload.addEventListener('change', async (e) => {
         if (!e.target.files[0]) return;
-        const formData = new FormData();
-        formData.append('document', e.target.files[0]);
         
         const uploadBtn = container.querySelector('#uploadDocBtn');
-        uploadBtn.textContent = 'Scanning OCR...';
+        uploadBtn.textContent = 'Loading Tesseract Engine...';
 
         try {
-          const res = await fetch('http://localhost:3000/api/insurance/parse-document', {
-            method: 'POST',
-            body: formData
+          // Load Tesseract dynamically if not loaded
+          if (!window.Tesseract) {
+            await new Promise((resolve) => {
+              const script = document.createElement('script');
+              script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+              script.onload = resolve;
+              document.head.appendChild(script);
+            });
+          }
+
+          uploadBtn.textContent = 'Scanning OCR...';
+          
+          const result = await window.Tesseract.recognize(e.target.files[0], 'eng');
+          const text = result.data.text.toLowerCase();
+
+          let coverage_type = 'Third-Party';
+          if (text.includes('comprehensive') || text.includes('own damage')) {
+            coverage_type = 'Comprehensive';
+          }
+
+          const dateMatch = text.match(/(?:valid upto|expiry|to)\s*:?\s*(\d{2}[\/\-]\d{2}[\/\-]\d{4})/i);
+          let expiry_date = dateMatch ? dateMatch[1] : 'Unknown Date';
+
+          renderCard({
+            provider_name: 'Scanned Provider',
+            expiry_date: expiry_date,
+            coverage_type: coverage_type
           });
-          const result = await res.json();
-          if(result.success) renderCard(result.data);
-          else alert(result.error);
+
         } catch (err) {
           console.error(err);
-          alert('Failed to connect to backend API');
+          alert('Failed to parse document');
         }
         uploadBtn.textContent = 'Upload Policy Document';
       });
