@@ -19,11 +19,11 @@ export default class DashboardView {
     container.innerHTML = `
       <header style="display: flex; justify-content: space-between; align-items: center;">
         <div>
-          <h2>Hi, ${user.name.split(' ')[0]} 👋</h2>
+          <h2>Hi, ${user.name.split(' ')[0]} <span>&#128075;</span></h2>
           <p>${vehicle.model}</p>
         </div>
         <div style="width: 40px; height: 40px; background: var(--glass-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-          👤
+          <span>&#128100;</span>
         </div>
       </header>
 
@@ -87,7 +87,7 @@ export default class DashboardView {
       <section>
         <h3 style="margin-bottom: 16px;">Tools</h3>
         <div class="glass-panel" style="padding: 16px; display: flex; align-items: center; gap: 16px; cursor: pointer;">
-          <div style="font-size: 2rem;">🔍</div>
+          <div style="font-size: 2rem;">&#128269;</div>
           <div>
             <h4 style="margin: 0;">Used Vehicle Inspector</h4>
             <p style="font-size: 0.8rem; margin: 4px 0 0;">Checklists for buying second-hand</p>
@@ -107,7 +107,7 @@ export default class DashboardView {
     const renderCard = (data) => {
       let cardColor = data.coverage_type === 'Third-Party' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)';
       let borderColor = data.coverage_type === 'Third-Party' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)';
-      let headerLabel = data.coverage_type === 'Third-Party' ? '🔴 Coverage Level: Basic (Third-Party Only)' : '🟢 Coverage Level: Maximum (Zero-Depreciation)';
+      let headerLabel = data.coverage_type === 'Third-Party' ? '&#128308; Coverage Level: Basic (Third-Party Only)' : '&#128994; Coverage Level: Maximum (Zero-Depreciation)';
       
       let bodyText = '';
       if (data.coverage_type === 'Third-Party') {
