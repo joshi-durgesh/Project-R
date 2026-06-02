@@ -4,8 +4,8 @@ export default class Router {
     this.routes = {};
     
     // Listen to history changes
-    window.addEventListener('popstate', () => {
-      this.handleRoute(window.location.pathname);
+    window.addEventListener('hashchange', () => {
+      this.handleRoute();
     });
   }
 
@@ -14,11 +14,13 @@ export default class Router {
   }
 
   navigate(path) {
-    window.history.pushState({}, '', path);
-    this.handleRoute(path);
+    window.location.hash = path;
   }
 
-  handleRoute(path) {
+  handleRoute() {
+    const hash = window.location.hash || '#/';
+    const path = hash.replace('#', '');
+    
     // Basic exact match routing for MVP
     const route = this.routes[path] || this.routes['/'];
     if (route) {
