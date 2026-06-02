@@ -31,7 +31,11 @@ class App {
   }
 }
 
-// Initialize app when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize app
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    window.app = new App();
+  });
+} else {
   window.app = new App();
-});
+}
