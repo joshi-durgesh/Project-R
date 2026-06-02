@@ -68,23 +68,19 @@ export default class DashboardView {
 
       <section>
         <h3 style="margin-bottom: 16px;">Insurance Locker</h3>
-        <div class="glass-panel" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2)); border: 1px solid rgba(139, 92, 246, 0.3);">
-          <div style="display: flex; justify-content: space-between;">
-            <h4>Comprehensive Cover</h4>
-            <span style="color: var(--success);">Active</span>
-          </div>
-          <p style="font-size: 0.9rem; margin-top: 8px;">Expires in 142 days</p>
-          
-          <div style="margin-top: 16px; font-size: 0.9rem;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-              ✅ <span style="color: var(--text-primary);">Own Damage (Zero Dep)</span>
+        <div id="insuranceContainer">
+          <div class="glass-panel">
+            <h4 style="margin-bottom: 16px;">Add Your Insurance</h4>
+            <div class="input-group">
+              <input type="text" id="rcInput" class="input-field" placeholder="Enter RC Number (e.g. DL1CAB1234)" style="margin-bottom: 8px;">
+              <button id="fetchRcBtn" class="btn btn-primary" style="margin-bottom: 16px;">Fetch via VAHAN</button>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              ✅ <span style="color: var(--text-primary);">Third Party Liability</span>
+            <div style="text-align: center; color: var(--text-secondary); margin-bottom: 16px;">-- OR --</div>
+            <div class="input-group">
+              <input type="file" id="policyUpload" accept="image/*,application/pdf" style="display: none;">
+              <button id="uploadDocBtn" class="btn" style="background: rgba(255,255,255,0.1);" onclick="document.getElementById('policyUpload').click()">Upload Policy Document</button>
             </div>
           </div>
-          
-          <button class="btn" style="background: rgba(255,255,255,0.1); margin-top: 16px;">Claim Guide</button>
         </div>
       </section>
 
@@ -102,5 +98,95 @@ export default class DashboardView {
 
     root.appendChild(container);
     root.appendChild(getBottomNav('/dashboard', router));
+
+    // Bind Insurance Logic
+    const fetchRcBtn = container.querySelector('#fetchRcBtn');
+    const policyUpload = container.querySelector('#policyUpload');
+    const insuranceContainer = container.querySelector('#insuranceContainer');
+
+    const renderCard = (data) => {
+      let cardColor = data.coverage_type === 'Third-Party' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)';
+      let borderColor = data.coverage_type === 'Third-Party' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)';
+      let headerLabel = data.coverage_type === 'Third-Party' ? '🔴 Coverage Level: Basic (Third-Party Only)' : '🟢 Coverage Level: Maximum (Zero-Depreciation)';
+      
+      let bodyText = '';
+      if (data.coverage_type === 'Third-Party') {
+        bodyText = `
+          <p style="font-size: 0.9rem; font-weight: bold; margin-top: 8px;">What this means: You are legally allowed to drive, but your vehicle is NOT protected.</p>
+          <ul style="font-size: 0.8rem; margin-top: 8px; padding-left: 16px; color: var(--text-secondary);">
+            <li>If you crash: Insurance only pays for the OTHER person's vehicle or injuries. You will pay 100% of your own repair costs.</li>
+          </ul>
+          <button class="btn btn-primary" style="margin-top: 16px;">Set reminder to upgrade</button>
+        `;
+      } else {
+        bodyText = `
+          <p style="font-size: 0.9rem; font-weight: bold; margin-top: 8px;">What this means: You are fully protected.</p>
+          <ul style="font-size: 0.8rem; margin-top: 8px; padding-left: 16px; color: var(--text-secondary);">
+            <li>If you crash: You only pay a small file charge. The insurance pays for almost 100% of the fiber, plastic, and metal parts.</li>
+          </ul>
+          <div style="background: rgba(239, 68, 68, 0.1); padding: 8px; border-radius: 4px; margin-top: 12px; font-size: 0.8rem; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">
+            Warning: You can usually only claim this twice a year. Don't use it for minor scratches!
+          </div>
+        `;
+      }
+
+      insuranceContainer.innerHTML = `
+        <div class="glass-panel animate-fade-in" style="background: linear-gradient(135deg, ${cardColor}, transparent); border: 1px solid ${borderColor};">
+          <h4 style="margin-bottom: 8px; font-size: 1rem;">${headerLabel}</h4>
+          <div style="font-size: 0.8rem; color: var(--text-secondary);">
+            <strong>Provider:</strong> ${data.provider_name} | <strong>Valid Upto:</strong> ${data.expiry_date}
+          </div>
+          ${bodyText}
+        </div>
+      `;
+    };
+
+    if (fetchRcBtn) {
+      fetchRcBtn.addEventListener('click', async () => {
+        const rcInput = container.querySelector('#rcInput').value;
+        if(!rcInput) return alert('Enter RC Number');
+        fetchRcBtn.textContent = 'Fetching...';
+        
+        try {
+          const res = await fetch('http://localhost:3000/api/insurance/fetch-by-rc', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rc_number: rcInput })
+          });
+          const result = await res.json();
+          if(result.success) renderCard(result.data);
+          else alert(result.error);
+        } catch (err) {
+          console.error(err);
+          alert('Failed to connect to backend API');
+          fetchRcBtn.textContent = 'Fetch via VAHAN';
+        }
+      });
+    }
+
+    if (policyUpload) {
+      policyUpload.addEventListener('change', async (e) => {
+        if (!e.target.files[0]) return;
+        const formData = new FormData();
+        formData.append('document', e.target.files[0]);
+        
+        const uploadBtn = container.querySelector('#uploadDocBtn');
+        uploadBtn.textContent = 'Scanning OCR...';
+
+        try {
+          const res = await fetch('http://localhost:3000/api/insurance/parse-document', {
+            method: 'POST',
+            body: formData
+          });
+          const result = await res.json();
+          if(result.success) renderCard(result.data);
+          else alert(result.error);
+        } catch (err) {
+          console.error(err);
+          alert('Failed to connect to backend API');
+        }
+        uploadBtn.textContent = 'Upload Policy Document';
+      });
+    }
   }
 }
