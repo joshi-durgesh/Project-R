@@ -104,13 +104,13 @@ export default class EmergencyView {
       const issue = "Breakdown";
       const model = vehicle ? vehicle.model : "Unknown Vehicle";
       
-      const payload = \`SOS - Breakdown. Vehicle: \${model}. Issue: \${issue}. Location: \${lat}, \${lng}. Please send mechanic.\`;
+      const payload = `SOS - Breakdown. Vehicle: ${model}. Issue: ${issue}. Location: ${lat}, ${lng}. Please send mechanic.`;
       
       // Use native sms URI scheme
       // Note: iOS and Android handle SMS URIs slightly differently for body text. 
       // ?body= is widely supported, but some iOS versions use &body= if a number is present.
       // We'll use a generic dispatcher number "1234567890" for demo.
-      const smsUri = \`sms:1234567890?body=\${encodeURIComponent(payload)}\`;
+      const smsUri = `sms:1234567890?body=${encodeURIComponent(payload)}`;
       
       window.location.href = smsUri;
     }
