@@ -14,7 +14,12 @@ export default class Router {
   }
 
   navigate(path) {
-    window.location.hash = path;
+    // If the hash is already the target path, hashchange won't fire, so trigger it manually
+    if (window.location.hash === '#' + path || window.location.hash === path) {
+      this.handleRoute();
+    } else {
+      window.location.hash = path;
+    }
   }
 
   handleRoute() {
